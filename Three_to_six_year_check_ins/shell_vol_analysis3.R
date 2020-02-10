@@ -23,28 +23,16 @@ dir.out = "G:/1.0 Restoration and Monitoring/1.0 3_6_yr_monitoring/shell_volume_
 # ----------------- #
 # load data
 # ----------------- #
-dat = read.csv(paste(dir.in, "shell_vol_final.csv", sep="/"))
+dat = read_excel("G:/1.0 Restoration and Monitoring/1.0 3_6_yr_monitoring/4.0 2018-2015 cohort/2.0 Data/shell_vol_final.xlsx", sheet=1)
+ dat=dat%>% rename(vol='total vol per sq m') 
 
-dat = filter(dat, !is.na(TotVolume)) %>% 
-  dplyr::select(SampleEvent, Rep, TotVolume, pctBlackShell) %>%
-  mutate(SampleEvent = as.character(SampleEvent),
-         year = sapply(strsplit(SampleEvent,"-"), "[[", 2), 
-         trib = sapply(strsplit(SampleEvent, "-"), head, 1),
-         survey = sapply(strsplit(SampleEvent,"-"), "[[", 3),
-         reef = sapply(strsplit(SampleEvent, "-"), tail, 1),
-         type = sapply(strsplit(SampleEvent, "-"), "[[", 4),
-         surfShellVol = TotVolume - (TotVolume * (pctBlackShell/100)),
-         type2 = paste(type, reef, sep = "-")) %>%
-  filter(type2 %in% c("CS-001","CS-002","CS-003","CS-004","SS-104","PM-999","SO-TR3","SO-TR4","MS-106","SO-002","SO-008","SO-046","SO-056","SO-072"),
-         trib %in% "HARR", 
-         year %in% c(2015, 2018))
-#rm(dat_2015)
+
 # ----------------- #
 
 # ----------------- #
 # aov
 # ----------------- #
-dat2 = mutate(dat, reef_year = paste(reef, year)) 
+dat2 = mutate(dat, reef_year = paste(ReefID, Year)) 
 
 dat_aov_totVol = aov(TotVolume ~ reef_year, data = dat2)
 summary(dat_aov_totVol)
@@ -98,10 +86,10 @@ HSD_means2 = cbind(x,y)
 # descriptive tables
 # ----------------- #
 #boxplot
-p = ggplot() + geom_boxplot(data = dat2, aes(x = reef, y = TotVolume, fill = year)) + theme_bw() + 
-  geom_text(data = HSD_groups, aes(x = reef, y = TotVolume + 25, label = groups, col = year), fontface = "bold", size = 5, position = "dodge")+
-  theme(text = element_text(size = 20))+
-  ggtitle("Total Shell Volume")
+p =  ggplot() + geom_boxplot(data = dat2, aes(x = ReefID, y = vol, fill = as.character(Year))) + theme_bw()+ 
++         geom_text(data = HSD_groups, aes(x = reef, y = vol + 25, label = groups, col = year), fontface = "bold", size = 5, position = "dodge")+
++       theme(text = element_text(size = 20))+
++       ggtitle("Total Shell Volume")
 p
 ggsave(paste(dir.out, "tot_shell_vol_boxplot.png",sep=""),p)
 
